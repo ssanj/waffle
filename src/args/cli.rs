@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 /// Tasty version information
 #[derive(Parser, Debug, Clone)]
@@ -16,8 +16,20 @@ pub struct Args {
 pub enum WaffleCommands {
     /// Get the current version
     Get,
-    /// Bump the current version to the next version. Updates Cargo.toml.
-    Bump,
+    /// Bump the current version to the next version. One of Major, Minor or Patch Updates Cargo.toml.
+    Bump {
+      /// Major
+      #[arg(short = 'M')]
+      major: bool,
+
+      /// Minor
+      #[arg(short)]
+      minor: bool,
+
+      /// Patch
+      #[arg(short)]
+      patch: bool,
+    },
     /// Displays command to Git tag current version
     Tag,
 }
