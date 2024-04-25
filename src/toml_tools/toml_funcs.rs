@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::error::{WaffleError, ResultW, FileName};
 use crate::toml_tools::{CargoToml, Package};
 
@@ -19,4 +19,11 @@ pub fn load_toml_file(file_name: &Path) -> ResultW<String> {
   fs
     ::read_to_string(file_name)
     .map_err(|e| WaffleError::CouldNotReadTomlFile(FileName::new(file_name), e.to_string()))
+}
+
+
+pub fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
+  let default_toml_file = PathBuf::from("./Cargo.toml");
+  toml_file_arg
+    .map_or_else(|| default_toml_file, |tf| PathBuf::from(tf))
 }

@@ -1,8 +1,7 @@
-use std::path::{Path, PathBuf};
-use std::{format as s, println as p, eprintln as e};
+use std::{println as p, eprintln as e};
 
 use crate::args::{cli, BumpType};
-use crate::error::{WaffleError, ResultW};
+use crate::error::ResultW;
 use crate::toml_tools::{self, ValidatedPackage};
 use crate::output::Output;
 
@@ -18,7 +17,7 @@ pub fn perform_workflow() {
 pub fn workflow() -> ResultW<Output> {
   let args = cli::get_cli_args();
 
-  let toml_file = get_toml_file(args.toml_file);
+  let toml_file = toml_tools::get_toml_file(args.toml_file);
   p!("Using toml file: {}", toml_file.to_string_lossy());
 
   let current_version = toml_tools::get_current_version(&toml_file)?;
@@ -41,10 +40,4 @@ pub fn workflow() -> ResultW<Output> {
       Ok(Output::Tag(current_version))
     },
   }
-}
-
-fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
-  let default_toml_file = PathBuf::from("./Cargo.toml");
-  toml_file_arg
-    .map_or_else(|| default_toml_file, |tf| PathBuf::from(tf))
 }
