@@ -104,31 +104,76 @@ impl TryFrom<Package> for ValidatedPackage {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use pretty_assertions::assert_eq;
 
     // TODO: Try out a fuzzer
+    // TODO: Move this out ouf toml_tools
 
-    #[test]
-    fn bump_patch_version() {
-      assert_bump_version("1.2.3", BumpType::Patch, "1.2.4");
-    }
+    mod validatedpackage {
 
-    #[test]
-    fn bump_minor_version() {
-      assert_bump_version("1.2.3", BumpType::Minor, "1.3.0");
-    }
+      mod bump {
+        use super::super::super::ValidatedPackage;
+        use crate::args::BumpType;
+        use pretty_assertions::assert_eq;
 
-    #[test]
-    fn bump_major_version() {
-      assert_bump_version("1.2.3", BumpType::Major, "2.0.0");
-    }
+        #[test]
+        fn patch_version() {
+          assert_bump_version("1.2.3", BumpType::Patch, "1.2.4");
+        }
 
-    fn assert_bump_version(version: &str, bump_type: BumpType, expected_version: &str) {
-      let package = ValidatedPackage::new(version);
-      let bumped_package = package.bump_version(bump_type);
-      let expected_bumped_package = ValidatedPackage::new(expected_version);
+        #[test]
+        fn minor_version() {
+          assert_bump_version("1.2.3", BumpType::Minor, "1.3.0");
+        }
 
-      assert_eq!(bumped_package, expected_bumped_package)
+        #[test]
+        fn major_version() {
+          assert_bump_version("1.2.3", BumpType::Major, "2.0.0");
+        }
+
+        fn assert_bump_version(version: &str, bump_type: BumpType, expected_version: &str) {
+          let package = ValidatedPackage::new(version);
+          let bumped_package = package.bump_version(bump_type);
+          let expected_bumped_package = ValidatedPackage::new(expected_version);
+
+          assert_eq!(bumped_package, expected_bumped_package)
+        }
+      }
+
+      mod try_from {
+        use crate::error::{ResultW, WaffleError};
+
+        use super::super::super::{Package, ValidatedPackage};
+        use pretty_assertions::assert_eq;
+
+        #[test]
+        fn valid_package_conversion() {
+          let package = Package::new("1.2.3");
+
+          let validated_package: ValidatedPackage = package.try_into().unwrap();
+          let expected_package = ValidatedPackage::new("1.2.3");
+
+          assert_eq!(validated_package, expected_package)
+        }
+
+        #[test]
+        fn non_semver_package_conversion() {
+          let package = Package::new("1.2");
+
+          let validated_package_result: ResultW<ValidatedPackage> = package.clone().try_into();
+          let expected_package_error = Err(WaffleError::NotSemver(package));
+
+          assert_eq!(validated_package_result, expected_package_error)
+        }
+
+        #[test]
+        fn non_numeric_package_conversion() {
+          let package = Package::new("1.abc.3");
+
+          let validated_package_result: ResultW<ValidatedPackage> = package.clone().try_into();
+          let expected_package_error = Err(WaffleError::NonNumericVersions(package));
+
+          assert_eq!(validated_package_result, expected_package_error)
+        }
+      }
     }
 }
