@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{format as s, println as p, eprintln as e};
 
 use crate::args::{cli, BumpType};
@@ -17,9 +17,10 @@ pub fn perform_workflow() {
 
 pub fn workflow() -> ResultW<Output> {
   let args = cli::get_cli_args();
-  // TODO: Supplied file or default to Cargo.toml
-  let toml_file = Path::new("./Cargo.toml");
-  // TODO: Write out Cargo toml being used
+
+  let toml_file = get_toml_file(args.toml_file);
+  p!("Using toml file: {}", toml_file.to_string_lossy());
+
   let current_version = toml_tools::get_current_version(&toml_file)?;
   match args.commands {
     cli::WaffleCommands::Get => {
@@ -42,43 +43,8 @@ pub fn workflow() -> ResultW<Output> {
   }
 }
 
-// TODO: Move bump-related functionality into a separate module
-fn get_bump_type(major: bool, minor: bool, patch: bool) -> ResultW<BumpType> {
-    let set_flags =
-      vec![major, minor, patch]
-        .into_iter()
-        .filter(|v| *v)
-        .count();
-
-    if set_flags > 1 {
-      Err(WaffleError::InvalidBumpCombination)
-    } else {
-      let bump_type = {
-        if major {
-          BumpType::Major
-        } else if minor {
-          BumpType::Minor
-        } else {
-          BumpType::Patch
-        }
-      };
-
-      Ok(bump_type)
-    }
-}
-
-
-fn bump_version(current_version: ValidatedPackage, bump_type: BumpType) -> ValidatedPackage {
-  let ValidatedPackage { major, minor, patch } = current_version;
-  let (next_major, next_minor, next_patch) = match bump_type {
-    BumpType::Major => (major + 1, 0_u16, 0_u16),
-    BumpType::Minor => (major, minor + 1, 0_u16),
-    BumpType::Patch => (major, minor, patch + 1),
-  };
-
-  ValidatedPackage {
-    major: next_major,
-    minor: next_minor,
-    patch: next_patch,
-  }
+fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
+  let default_toml_file = PathBuf::from("./Cargo.toml");
+  toml_file_arg
+    .map_or_else(|| default_toml_file, |tf| PathBuf::from(tf))
 }

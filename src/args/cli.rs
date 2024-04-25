@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 
 /// Tasty version information
 #[derive(Parser, Debug, Clone)]
@@ -9,7 +9,11 @@ pub struct Args {
   pub verbose: bool,
 
   #[command(subcommand)]
-  pub commands: WaffleCommands
+  pub commands: WaffleCommands,
+
+  /// Location of toml file. If not specified defaults to Cargo.toml in the current directory
+  #[arg(long)]
+  pub toml_file: Option<String>
 }
 
 #[derive(Debug, Clone, Subcommand)]
