@@ -16,8 +16,10 @@ impl BumpType {
           .filter(|v| *v)
           .count();
 
-      if set_flags > 1 {
-        Err(WaffleError::InvalidBumpCombination)
+      if set_flags == 0 {
+        Err(WaffleError::NoBumpCombinations)
+      } else if set_flags > 1 {
+        Err(WaffleError::TooManyBumpCombinations)
       } else {
         let bump_type = {
           if major {

@@ -26,7 +26,8 @@ impl fmt::Display for FileName {
 pub enum WaffleError {
   CouldNotReadTomlFile(FileName, String),
   CouldParseTomlFile(FileName, String),
-  InvalidBumpCombination,
+  TooManyBumpCombinations,
+  NoBumpCombinations,
   NonNumericVersions(Package),
   NotSemver(Package),
 }
@@ -39,7 +40,9 @@ impl fmt::Display for WaffleError {
 
       WaffleError::CouldParseTomlFile(filename, error) => s!("Could not parse toml file: {filename}, due to error: {error}"),
 
-      WaffleError::InvalidBumpCombination => "Only one of Major, Minor or Patch is allowed".to_owned(),
+      WaffleError::TooManyBumpCombinations => "Only one of Major, Minor or Patch is allowed".to_owned(),
+
+      WaffleError::NoBumpCombinations => "At least one of Major, Minor or Patch is required".to_owned(),
 
       WaffleError::NonNumericVersions(package) => s!("Toml package.version: {package} is not numeric"),
 

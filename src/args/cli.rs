@@ -18,9 +18,9 @@ pub struct Args {
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum WaffleCommands {
-    /// Get the current version
+    /// Get the project current version
     Get,
-    /// Bump the current version to the next version. One of Major, Minor or Patch Updates Cargo.toml.
+    /// Bump the current project version to the next version. One of Major, Minor or Patch.
     Bump {
       /// Major
       #[arg(short = 'M')]
@@ -34,7 +34,7 @@ pub enum WaffleCommands {
       #[arg(short)]
       patch: bool,
     },
-    /// Displays command to Git tag current version
+    /// Displays command to Git tag current project version
     Tag,
 }
 
