@@ -6,6 +6,7 @@ use crate::toml_tools::{Package, ValidatedPackage};
 pub enum Output {
   Version(Package),
   Tag(Package),
+  // TODO: Add before and after versions here
   Bump(ValidatedPackage)
 }
 
@@ -14,7 +15,8 @@ impl fmt::Display for Output {
       let output = match self {
         Output::Version(Package { version }) => version.to_owned(),
         Output::Tag(Package { version }) => s!("git tag v{}", version),
-        Output::Bump(ValidatedPackage { major, minor, patch }) => s!("{major}.{minor}.{patch}"),
+        // TODO: Add before and after versions here
+        Output::Bump(ValidatedPackage { major, minor, patch }) => s!("updated to: {major}.{minor}.{patch}"),
       };
 
       write!(f, "{output}")

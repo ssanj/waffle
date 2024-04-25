@@ -1,7 +1,20 @@
-use crate::error::WaffleError;
-use crate::args::BumpType;
+use toml_edit::value;
+use toml_edit::Formatted;
+use toml_edit::Value;
+
 use std::str::FromStr;
 use std::fmt;
+use std::format as s;
+
+use crate::error::WaffleError;
+use crate::args::BumpType;
+
+
+pub struct TomlData {
+  pub package: Package,
+  pub content: String
+}
+
 
 #[derive(serde::Deserialize)]
 pub struct CargoToml {
@@ -100,6 +113,13 @@ impl TryFrom<Package> for ValidatedPackage {
         _ => Err(WaffleError::NotSemver(package)),
       }
     }
+}
+
+impl From<ValidatedPackage> for Value {
+  fn from(package: ValidatedPackage) -> Self {
+    let version = s!("{}.{}.{}", package.major, package.minor, package.patch);
+    Value::String(Formatted::new(version))
+  }
 }
 
 #[cfg(test)]

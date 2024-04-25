@@ -1,3 +1,3 @@
 mod error;
 
-pub use error::{WaffleError, ResultW, FileName};
+pub use error::{WaffleError, ResultW, FileName, TomlContent};

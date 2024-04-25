@@ -1,17 +1,27 @@
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use crate::error::{WaffleError, ResultW, FileName};
+use toml_edit::{value, DocumentMut, Value};
+
+use crate::args::BumpType;
+use crate::error::{FileName, ResultW, TomlContent, WaffleError};
 use crate::toml_tools::{CargoToml, Package};
+use super::{TomlData, ValidatedPackage};
 
-
-pub fn get_current_version(file_name: &Path) -> ResultW<Package> {
+pub fn get_current_version(file_name: &Path) -> ResultW<TomlData> {
   let toml_content = load_toml_file(file_name)?;
   let toml_struct: CargoToml =
     toml
       ::from_str(&toml_content)
       .map_err(|e| WaffleError::CouldParseTomlFile(FileName::new(file_name), e.to_string()))?;
 
-  Ok(toml_struct.package)
+  let toml_data =
+    TomlData {
+      package: toml_struct.package,
+      content: toml_content
+    };
+
+  Ok(toml_data)
 }
 
 
@@ -27,3 +37,59 @@ pub fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
   toml_file_arg
     .map_or_else(|| default_toml_file, |tf| PathBuf::from(tf))
 }
+
+
+pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage) -> ResultW<()> {
+
+  let updated_toml = update_toml(&toml_file, toml_content, next_version)?;
+  println!("{}", updated_toml);
+  write_toml_file(toml_file, updated_toml.to_string())?;
+
+  Ok(())
+}
+
+
+pub fn update_toml<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage) -> ResultW<DocumentMut> {
+  let mut doc =
+    toml_content.parse::<DocumentMut>()
+    .map_err(|e| WaffleError::CouldConvertTomlContentToDocument(FileName::new(toml_file.as_ref()), TomlContent::new(&toml_content), e.to_string()))?;
+
+  doc["package"]["version"] = value(next_version.clone());
+
+  Ok(doc)
+}
+
+
+fn write_toml_file<P: AsRef<Path>>(toml_file: P, content: String) -> ResultW<()> {
+  std::fs::write(toml_file.as_ref(), &content)
+    .map_err(|e| WaffleError::CouldNotUpdateTomlFile(FileName::new(toml_file.as_ref()), TomlContent::new(&content), e.to_string()))
+}
+
+
+
+// use toml_edit::{value, DocumentMut, Value};
+
+// fn main() {
+//     let toml = r#"
+// [package]
+// name = "tomlwrite"
+// version = "0.1.0"
+// edition = "2021"
+
+// # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+// [dependencies]
+// toml_edit = { version = "0.22.12", features = ["serde"] }
+//     "#;
+
+//     let mut doc = toml.parse::<DocumentMut>().unwrap();
+
+//     println!("{}", doc.to_string());
+//     let new_version = "0.1.1";
+//     doc["package"]["version"] = value(new_version);
+//     println!("------------");
+//     println!("{}", doc.to_string());
+//     println!("git tag v{}", new_version)
+// }
+
+

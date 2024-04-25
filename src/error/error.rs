@@ -22,10 +22,30 @@ impl fmt::Display for FileName {
   }
 }
 
+
+#[derive(Debug, PartialEq)]
+pub struct TomlContent(String);
+
+impl TomlContent {
+
+  pub fn new(content: &str) -> Self {
+    Self(content.to_owned())
+  }
+}
+
+
+impl fmt::Display for TomlContent {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{}", self.0)
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum WaffleError {
   CouldNotReadTomlFile(FileName, String),
+  CouldNotUpdateTomlFile(FileName, TomlContent, String),
   CouldParseTomlFile(FileName, String),
+  CouldConvertTomlContentToDocument(FileName, TomlContent, String),
   TooManyBumpCombinations,
   NoBumpCombinations,
   NonNumericVersions(Package),
@@ -36,9 +56,13 @@ pub enum WaffleError {
 impl fmt::Display for WaffleError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     let result = match self {
-      WaffleError::CouldNotReadTomlFile(filename, error) => s!("Could not read toml file: {filename}, due to error: {error}"),
+      WaffleError::CouldNotReadTomlFile(filename, error) => s!("Could not read Toml file: {filename}, due to error: {error}"),
 
-      WaffleError::CouldParseTomlFile(filename, error) => s!("Could not parse toml file: {filename}, due to error: {error}"),
+      WaffleError::CouldNotUpdateTomlFile(filename, content, error) => s!("Could not update Toml file: {filename}, with content:\n{content} due to error:\n{error}"),
+
+      WaffleError::CouldParseTomlFile(filename, error) => s!("Could not parse Toml file: {filename}, due to error: {error}"),
+
+      WaffleError::CouldConvertTomlContentToDocument(filename, content, error) => s!("Could not parse Toml file: {filename} into Toml document. \nContent: {content}\nerror: {error}"),
 
       WaffleError::TooManyBumpCombinations => "Only one of Major, Minor or Patch is allowed".to_owned(),
 
