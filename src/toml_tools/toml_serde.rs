@@ -8,10 +8,20 @@ pub struct CargoToml {
   pub package: Package
 }
 
-
-#[derive(serde::Deserialize, Clone)]
+#[derive(Debug, PartialEq, serde::Deserialize, Clone)]
 pub struct Package {
   pub version: String
+}
+
+impl Package {
+
+  #[cfg(test)]
+  fn new(version: &str) -> Self {
+    Self {
+      version: version.to_owned()
+    }
+  }
+
 }
 
 impl fmt::Display for Package {
@@ -21,6 +31,7 @@ impl fmt::Display for Package {
 }
 
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ValidatedPackage {
   pub major: u16,
   pub minor: u16,
@@ -29,6 +40,23 @@ pub struct ValidatedPackage {
 
 
 impl ValidatedPackage {
+
+  #[cfg(test)]
+  fn new(version: &str) -> Self {
+    let parts: Vec<_> =
+      version
+        .splitn(3, ".")
+        .map(|num| u16::from_str(num).unwrap())
+        .collect();
+
+    let (major, minor, patch) = (parts[0], parts[1], parts[2]);
+    Self {
+      major,
+      minor,
+      patch
+    }
+  }
+
   pub fn bump_version(&self, bump_type: BumpType) -> ValidatedPackage {
     let (next_major, next_minor, next_patch) = match bump_type {
       BumpType::Major => (self.major + 1, 0_u16, 0_u16),
@@ -71,5 +99,36 @@ impl TryFrom<Package> for ValidatedPackage {
         },
         _ => Err(WaffleError::NotSemver(package)),
       }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    // TODO: Try out a fuzzer
+
+    #[test]
+    fn bump_patch_version() {
+      assert_bump_version("1.2.3", BumpType::Patch, "1.2.4");
+    }
+
+    #[test]
+    fn bump_minor_version() {
+      assert_bump_version("1.2.3", BumpType::Minor, "1.3.0");
+    }
+
+    #[test]
+    fn bump_major_version() {
+      assert_bump_version("1.2.3", BumpType::Major, "2.0.0");
+    }
+
+    fn assert_bump_version(version: &str, bump_type: BumpType, expected_version: &str) {
+      let package = ValidatedPackage::new(version);
+      let bumped_package = package.bump_version(bump_type);
+      let expected_bumped_package = ValidatedPackage::new(expected_version);
+
+      assert_eq!(bumped_package, expected_bumped_package)
     }
 }

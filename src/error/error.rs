@@ -6,6 +6,7 @@ use crate::toml_tools::Package;
 
 pub type ResultW<T> = Result<T, WaffleError>;
 
+#[derive(Debug, PartialEq)]
 pub struct FileName(PathBuf);
 
 impl FileName {
@@ -21,6 +22,7 @@ impl fmt::Display for FileName {
   }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum WaffleError {
   CouldNotReadTomlFile(FileName, String),
   CouldParseTomlFile(FileName, String),
