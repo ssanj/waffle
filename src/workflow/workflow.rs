@@ -29,9 +29,9 @@ pub fn workflow() -> ResultW<Output> {
     },
 
     cli::WaffleCommands::Bump{ major, minor, patch } => {
-      let bump_type = get_bump_type(major, minor, patch)?;
+      let bump_type = BumpType::get_bump_type(major, minor, patch)?;
       let validated_current_version: ValidatedPackage = current_version.try_into()?;
-      let next_version = bump_version(validated_current_version, bump_type);
+      let next_version = validated_current_version.bump_version(bump_type);
       Ok(Output::Bump(next_version))
     },
 
