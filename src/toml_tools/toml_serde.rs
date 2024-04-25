@@ -106,7 +106,7 @@ impl TryFrom<Package> for ValidatedPackage {
 mod tests {
 
     // TODO: Try out a fuzzer
-    // TODO: Move this out ouf toml_tools
+    // TODO: Move this out of toml_tools
 
     mod validatedpackage {
 
