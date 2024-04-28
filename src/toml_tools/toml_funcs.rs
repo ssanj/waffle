@@ -39,24 +39,20 @@ pub fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
 }
 
 
-pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage, verbose: bool) -> ResultW<()> {
+pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: &str, next_version: ValidatedPackage) -> ResultW<String> {
 
-  let updated_toml = update_toml(&toml_file, toml_content, next_version)?;
+  let updated_toml = update_toml(&toml_file, &toml_content, next_version)?;
+  let new_toml_content = updated_toml.to_string();
+  write_toml_file(toml_file, &new_toml_content)?;
 
-  if verbose {
-    println!("{}", updated_toml)
-  }
-
-  write_toml_file(toml_file, updated_toml.to_string())?;
-
-  Ok(())
+  Ok(new_toml_content)
 }
 
 
-pub fn update_toml<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage) -> ResultW<DocumentMut> {
+pub fn update_toml<P: AsRef<Path>>(toml_file: P, toml_content: &str, next_version: ValidatedPackage) -> ResultW<DocumentMut> {
   let mut doc =
     toml_content.parse::<DocumentMut>()
-    .map_err(|e| WaffleError::CouldConvertTomlContentToDocument(FileName::new(toml_file.as_ref()), TomlContent::new(&toml_content), e.to_string()))?;
+    .map_err(|e| WaffleError::CouldConvertTomlContentToDocument(FileName::new(toml_file.as_ref()), TomlContent::new(toml_content), e.to_string()))?;
 
   doc["package"]["version"] = value(next_version.clone());
 
@@ -64,7 +60,7 @@ pub fn update_toml<P: AsRef<Path>>(toml_file: P, toml_content: String, next_vers
 }
 
 
-fn write_toml_file<P: AsRef<Path>>(toml_file: P, content: String) -> ResultW<()> {
-  std::fs::write(toml_file.as_ref(), &content)
-    .map_err(|e| WaffleError::CouldNotUpdateTomlFile(FileName::new(toml_file.as_ref()), TomlContent::new(&content), e.to_string()))
+fn write_toml_file<P: AsRef<Path>>(toml_file: P, content: &str) -> ResultW<()> {
+  std::fs::write(toml_file.as_ref(), content)
+    .map_err(|e| WaffleError::CouldNotUpdateTomlFile(FileName::new(toml_file.as_ref()), TomlContent::new(content), e.to_string()))
 }

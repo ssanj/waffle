@@ -1,5 +1,8 @@
-use std::path::Path;
+use std::fmt::Display;
 use std::{println as p, eprintln as e};
+
+use ansi_term::Colour;
+use similar::{ChangeTag, TextDiff};
 
 use crate::args::{cli, BumpType};
 use crate::error::ResultW;
@@ -33,7 +36,12 @@ pub fn workflow() -> ResultW<Output> {
       let bump_type = BumpType::get_bump_type(major, minor, patch)?;
       let validated_current_version: ValidatedPackage = package.try_into()?;
       let next_version = validated_current_version.bump_version(bump_type);
-      toml_tools::write_updated_version(toml_file, content, next_version.clone(), args.verbose)?;
+      let new_content = toml_tools::write_updated_version(toml_file, &content, next_version.clone())?;
+
+      if  args.verbose {
+        show_diff(&content, &new_content)
+      }
+
       Ok(Output::Bump(validated_current_version, next_version))
     },
 
@@ -46,3 +54,17 @@ pub fn workflow() -> ResultW<Output> {
 }
 
 
+fn show_diff(content: &str, new_content: &str) {
+    let text_diff = TextDiff::from_lines(content, new_content);
+    for change in text_diff.iter_all_changes() {
+      match change.tag() {
+        ChangeTag::Delete => print_diff("-", Colour::Red, change),
+        ChangeTag::Insert => print_diff("+", Colour::Green, change),
+        ChangeTag::Equal => (),
+      }
+    }
+}
+
+fn print_diff<T: Display>(prefix: &str, colour: Colour, message: T) {
+  print!("  {}{}", colour.paint(prefix), message.to_string())
+}
