@@ -51,6 +51,11 @@ pub struct ValidatedPackage {
   pub patch: u16,
 }
 
+impl fmt::Display for ValidatedPackage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+    }
+}
 
 impl ValidatedPackage {
 

@@ -39,10 +39,14 @@ pub fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
 }
 
 
-pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage) -> ResultW<()> {
+pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: String, next_version: ValidatedPackage, verbose: bool) -> ResultW<()> {
 
   let updated_toml = update_toml(&toml_file, toml_content, next_version)?;
-  println!("{}", updated_toml);
+
+  if verbose {
+    println!("{}", updated_toml)
+  }
+
   write_toml_file(toml_file, updated_toml.to_string())?;
 
   Ok(())
@@ -64,32 +68,3 @@ fn write_toml_file<P: AsRef<Path>>(toml_file: P, content: String) -> ResultW<()>
   std::fs::write(toml_file.as_ref(), &content)
     .map_err(|e| WaffleError::CouldNotUpdateTomlFile(FileName::new(toml_file.as_ref()), TomlContent::new(&content), e.to_string()))
 }
-
-
-
-// use toml_edit::{value, DocumentMut, Value};
-
-// fn main() {
-//     let toml = r#"
-// [package]
-// name = "tomlwrite"
-// version = "0.1.0"
-// edition = "2021"
-
-// # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-// [dependencies]
-// toml_edit = { version = "0.22.12", features = ["serde"] }
-//     "#;
-
-//     let mut doc = toml.parse::<DocumentMut>().unwrap();
-
-//     println!("{}", doc.to_string());
-//     let new_version = "0.1.1";
-//     doc["package"]["version"] = value(new_version);
-//     println!("------------");
-//     println!("{}", doc.to_string());
-//     println!("git tag v{}", new_version)
-// }
-
-

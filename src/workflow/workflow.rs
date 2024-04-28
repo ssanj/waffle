@@ -33,8 +33,8 @@ pub fn workflow() -> ResultW<Output> {
       let bump_type = BumpType::get_bump_type(major, minor, patch)?;
       let validated_current_version: ValidatedPackage = package.try_into()?;
       let next_version = validated_current_version.bump_version(bump_type);
-      toml_tools::write_updated_version(toml_file, content, next_version.clone())?;
-      Ok(Output::Bump(next_version))
+      toml_tools::write_updated_version(toml_file, content, next_version.clone(), args.verbose)?;
+      Ok(Output::Bump(validated_current_version, next_version))
     },
 
     cli::WaffleCommands::Tag => {
