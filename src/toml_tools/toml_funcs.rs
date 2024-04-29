@@ -1,11 +1,9 @@
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
-use toml_edit::{value, DocumentMut, Value};
+use toml_edit::{value, DocumentMut};
 
-use crate::args::BumpType;
 use crate::error::{FileName, ResultW, TomlContent, WaffleError};
-use crate::toml_tools::{CargoToml, Package};
+use crate::toml_tools::CargoToml;
 use super::{TomlData, ValidatedPackage};
 
 pub fn get_current_version(file_name: &Path) -> ResultW<TomlData> {
