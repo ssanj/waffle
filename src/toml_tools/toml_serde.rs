@@ -62,7 +62,7 @@ impl ValidatedPackage {
   fn new(version: &str) -> Self {
     let parts: Vec<_> =
       version
-        .splitn(3, ".")
+        .splitn(3, '.')
         .map(|num| u16::from_str(num).unwrap())
         .collect();
 
@@ -98,7 +98,7 @@ impl TryFrom<Package> for ValidatedPackage {
         package
           .clone()
           .version
-          .split(".")
+          .split('.')
           .map(|v| u16::from_str(v)
           .map_err(|_| WaffleError::NonNumericVersions(package.clone())))
           .collect::<Result<Vec<u16>, Self::Error>>()?;

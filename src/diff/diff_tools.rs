@@ -15,5 +15,5 @@ pub fn show_diff(content: &str, new_content: &str) {
 }
 
 fn print_diff<T: Display>(prefix: &str, colour: Colour, message: T) {
-  print!("  {}{}", colour.paint(prefix), message.to_string())
+  print!("  {}{}", colour.paint(prefix), message)
 }

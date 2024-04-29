@@ -33,13 +33,13 @@ pub fn load_toml_file(file_name: &Path) -> ResultW<String> {
 pub fn get_toml_file(toml_file_arg: Option<String>) -> PathBuf {
   let default_toml_file = PathBuf::from("./Cargo.toml");
   toml_file_arg
-    .map_or_else(|| default_toml_file, |tf| PathBuf::from(tf))
+    .map_or_else(|| default_toml_file, PathBuf::from)
 }
 
 
 pub fn write_updated_version<P: AsRef<Path>>(toml_file: P, toml_content: &str, next_version: ValidatedPackage) -> ResultW<String> {
 
-  let updated_toml = update_toml(&toml_file, &toml_content, next_version)?;
+  let updated_toml = update_toml(&toml_file, toml_content, next_version)?;
   let new_toml_content = updated_toml.to_string();
   write_toml_file(toml_file, &new_toml_content)?;
 
