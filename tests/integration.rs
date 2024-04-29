@@ -40,26 +40,35 @@ assert_cmd = "2"
 "#;
 
 
-fn std_out_contains(expected: &str) -> FnPredicate<impl Fn(&[u8]) -> bool, [u8]> {
-    let owned_expected = expected.to_owned();
+fn std_out_contains<'a>(expected: &'a [&'a str]) -> FnPredicate<impl Fn(&[u8]) -> bool + 'a, [u8]> {
     predicate::function(move |out: &[u8]| {
+
+    let expected_values: Vec<_> =
+      expected
+        .iter()
+        .map(|item| item.to_owned())
+        .collect();
+
       let output = std::str::from_utf8(out).expect("Could not convert stdout to string");
-      let error = s!("Could not validate stdout contains: {}", &owned_expected);
-      p!("{}", Colour::Red.paint(&error));
-      p!("{}", "-".repeat(error.len()));
-      output.contains(&owned_expected)
+
+      expected_values.into_iter().all(|value| {
+        let error = s!("Could not validate stdout contains: {}", &value);
+        p!("{}", Colour::Red.paint(&error));
+        p!("{}", "-".repeat(error.len()));
+        output.contains(&value)
+      })
     })
-  }
+}
 
 
 #[test]
-fn gets_current_package_version() {
+fn get_current_package_version() {
   let working_dir = tempdir().unwrap();
   let sample_toml_file = working_dir.path().join("Sample.toml");
   std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
   println!("{}", &sample_toml_file.as_path().to_string_lossy());
   let mut cmd = Command::cargo_bin("waffle").unwrap();
-  let expected_version_string = "1.2.3";
+  let expected_version_string = ["1.2.3"];
 
   cmd
     .arg("--toml-file")
@@ -67,5 +76,49 @@ fn gets_current_package_version() {
     .arg("get")
     .assert()
     .success()
-    .stdout(std_out_contains(expected_version_string));
+    .stdout(std_out_contains(&expected_version_string));
+}
+
+
+#[test]
+fn tag_current_package_version() {
+  let working_dir = tempdir().unwrap();
+  let sample_toml_file = working_dir.path().join("Sample.toml");
+  std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
+  println!("{}", &sample_toml_file.as_path().to_string_lossy());
+  let mut cmd = Command::cargo_bin("waffle").unwrap();
+  let expected_version_string = ["git tag v1.2.3"];
+
+  cmd
+    .arg("--toml-file")
+    .arg(&sample_toml_file)
+    .arg("tag")
+    .assert()
+    .success()
+    .stdout(std_out_contains(&expected_version_string));
+}
+
+
+#[test]
+fn bump_current_package_version() {
+  let working_dir = tempdir().unwrap();
+  let sample_toml_file = working_dir.path().join("Sample.toml");
+  std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
+  println!("{}", &sample_toml_file.as_path().to_string_lossy());
+  let mut cmd = Command::cargo_bin("waffle").unwrap();
+  let expected_version_string =
+    [
+      "Updated version from: 1.2.3 -> 2.0.0",
+      &s!("{}version = \"1.2.3\"", Colour::Red.paint("-")),
+      &s!("{}version = \"2.0.0\"", Colour::Green.paint("+")),
+    ];
+
+  cmd
+    .arg("--toml-file")
+    .arg(&sample_toml_file)
+    .arg("bump")
+    .arg("-M")
+    .assert()
+    .success()
+    .stdout(std_out_contains(&expected_version_string));
 }
