@@ -14,7 +14,7 @@ impl fmt::Display for Output {
       let output = match self {
         Output::Version(Package { version }) => version.to_owned(),
         Output::Tag(Package { version }) => s!("git tag v{}", version),
-        Output::Bump(before, after) => s!("updated from: {before} -> {after}"),
+        Output::Bump(before, after) => s!("Updated version from: {before} -> {after}"),
       };
 
       write!(f, "{output}")
