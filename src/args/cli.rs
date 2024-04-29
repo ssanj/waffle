@@ -4,10 +4,6 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about)]
 pub struct Args {
-  /// Verbose debug logging
-  #[arg(long)]
-  pub verbose: bool,
-
   #[command(subcommand)]
   pub commands: WaffleCommands,
 
@@ -33,6 +29,11 @@ pub enum WaffleCommands {
       /// Patch
       #[arg(short)]
       patch: bool,
+
+      /// Hide change diff
+      #[arg(long)]
+      no_diff: bool,
+
     },
     /// Displays command to Git tag current project version
     Tag,

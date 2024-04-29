@@ -28,14 +28,14 @@ pub fn workflow() -> ResultW<Output> {
       Ok(Output::Version(toml_data.package))
     },
 
-    cli::WaffleCommands::Bump{ major, minor, patch } => {
+    cli::WaffleCommands::Bump{ major, minor, patch, no_diff } => {
       let TomlData { package, content } = toml_data;
       let bump_type = BumpType::get_bump_type(major, minor, patch)?;
       let validated_current_version: ValidatedPackage = package.try_into()?;
       let next_version = validated_current_version.bump_version(bump_type);
       let new_content = toml_tools::write_updated_version(toml_file, &content, next_version.clone())?;
 
-      if  args.verbose {
+      if  !no_diff {
         show_diff(&content, &new_content)
       }
 
