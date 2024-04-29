@@ -130,8 +130,6 @@ impl From<ValidatedPackage> for Value {
 mod tests {
 
     // TODO: Try out a fuzzer
-    // TODO: Move this out of toml_tools
-
     mod validatedpackage {
 
       mod bump {

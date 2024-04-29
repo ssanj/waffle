@@ -1,7 +1,7 @@
 
 mod args;
 mod error;
-mod toml_tools;
+mod wtoml;
 mod workflow;
 mod output;
 mod diff;

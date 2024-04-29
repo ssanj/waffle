@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::fmt;
 use std::format as s;
 
-use crate::toml_tools::Package;
+use crate::wtoml::Package;
 
 pub type ResultW<T> = Result<T, WaffleError>;
 

@@ -1,7 +1,7 @@
 use std::format as s;
 use std::fmt;
 
-use crate::toml_tools::{Package, ValidatedPackage};
+use crate::wtoml::{Package, ValidatedPackage};
 
 pub enum Output {
   Version(Package),

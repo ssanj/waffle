@@ -3,8 +3,7 @@ use std::path::{Path, PathBuf};
 use toml_edit::{value, DocumentMut};
 
 use crate::error::{FileName, ResultW, TomlContent, WaffleError};
-use crate::toml_tools::CargoToml;
-use super::{TomlData, ValidatedPackage};
+use super::{CargoToml, TomlData, ValidatedPackage};
 
 pub fn get_current_version(file_name: &Path) -> ResultW<TomlData> {
   let toml_content = load_toml_file(file_name)?;
