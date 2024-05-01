@@ -83,14 +83,6 @@ fn bump_major_version() {
     .stdout(std_out_comparison(&expected_comparisons));
 }
 
-fn setup_test<'a>(working_dir: &TempDir) -> (PathBuf, Command) {
-  let sample_toml_file = working_dir.path().join("Sample.toml");
-  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
-  println!("{}", &sample_toml_file.as_path().to_string_lossy());
-  let cmd = Command::cargo_bin("waffle").unwrap();
-  (sample_toml_file, cmd)
-}
-
 
 #[test]
 fn bump_current_package_version_without_diff() {
@@ -179,3 +171,13 @@ fn std_out_comparison<'a>(expected: &'a [ComparisonType<'a>]) -> FnPredicate<imp
       })
     })
 }
+
+
+fn setup_test<'a>(working_dir: &TempDir) -> (PathBuf, Command) {
+  let sample_toml_file = working_dir.path().join("Sample.toml");
+  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
+  println!("{}", &sample_toml_file.as_path().to_string_lossy());
+  let cmd = Command::cargo_bin("waffle").unwrap();
+  (sample_toml_file, cmd)
+}
+
