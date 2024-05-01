@@ -34,6 +34,8 @@ Copy binary file from target/release/waffle to a directory on your PATH.
 
 ## Usage
 
+### General information
+
 `waffle -h`:
 
 ```
@@ -54,6 +56,22 @@ Options:
   -V, --version                Print version
 ```
 
+### Bumping
+
+`waffle bump -h`:
+
+```
+Bump the current project version to the next version. One of Major, Minor or Patch
+
+Usage: waffle bump [OPTIONS]
+
+Options:
+  -M             Major
+  -m             Minor
+  -p             Patch
+      --no-diff  Hide change diff
+  -h, --help     Print help
+```
 
 ### Getting the current version
 
@@ -69,12 +87,17 @@ or
 waffle --toml-file <LOCATION_OF_TOML_FILE> get
 ```
 
+Example output:
+
+```
+Using toml file: ./Cargo.toml
+0.2.4
+```
+
 
 ### Bump current version
 
 You can bump the current version by major, minor or patch increments.
-
-Note: _At the moment this just prints out the next version. This will be updated to modify your Cargo.toml file with the new version in a subsequent release_.
 
 To perform a major version bump:
 ```
@@ -89,6 +112,15 @@ waffle bump -m
 To perform a patch version bump:
 ```
 waffle bump -p
+```
+
+Example output:
+
+```
+Using toml file: ./Cargo.toml
+  -version = "0.2.4"
+  +version = "0.2.5"
+Updated version from: 0.2.4 -> 0.2.5
 ```
 
 ### Git tag for current version
