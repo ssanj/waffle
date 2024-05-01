@@ -115,7 +115,7 @@ fn tag_current_package_version() {
 
 
 #[test]
-fn bump_current_package_version() {
+fn bump_major_version() {
   let working_dir = tempdir().unwrap();
   let sample_toml_file = working_dir.path().join("Sample.toml");
   std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
@@ -139,6 +139,37 @@ fn bump_current_package_version() {
     .arg(&sample_toml_file)
     .arg("bump")
     .arg("-M")
+    .assert()
+    .success()
+    .stdout(std_out_comparison(&expected_comparisons));
+}
+
+
+#[test]
+fn bump_current_package_version_without_diff() {
+  let working_dir = tempdir().unwrap();
+  let sample_toml_file = working_dir.path().join("Sample.toml");
+  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
+  println!("{}", &sample_toml_file.as_path().to_string_lossy());
+  let mut cmd = Command::cargo_bin("waffle").unwrap();
+
+  let old_version_diff = s!("{}version = \"1.2.3\"", Colour::Red.paint("-"));
+  let new_version_diff = s!("{}version = \"2.0.0\"", Colour::Green.paint("+"));
+  let expected_version_string = "Updated version from: 1.2.3 -> 2.0.0";
+
+  let expected_comparisons =
+    [
+      ComparisonType::Contains(expected_version_string),
+      ComparisonType::DoesNotContain(&old_version_diff),
+      ComparisonType::DoesNotContain(&new_version_diff),
+    ];
+
+  cmd
+    .arg("--toml-file")
+    .arg(&sample_toml_file)
+    .arg("bump")
+    .arg("-M")
+    .arg("--no-diff")
     .assert()
     .success()
     .stdout(std_out_comparison(&expected_comparisons));
