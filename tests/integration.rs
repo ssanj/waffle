@@ -57,30 +57,19 @@ fn tag_current_package_version() {
 
 #[test]
 fn bump_major_version() {
-  let working_dir = tempdir().unwrap();
-  let (sample_toml_file, mut cmd) = setup_test(&working_dir);
+  assert_version_bump("2.0.0", BumpType::Major)
+}
 
-  let expected_version_string =
-    [
-      "Updated version from: 1.2.3 -> 2.0.0",
-      &s!("{}version = \"1.2.3\"", Colour::Red.paint("-")),
-      &s!("{}version = \"2.0.0\"", Colour::Green.paint("+")),
-    ];
 
-  let expected_comparisons: Vec<_> =
-    expected_version_string
-      .into_iter()
-      .map(ComparisonType::Contains)
-      .collect();
+#[test]
+fn bump_minor_version() {
+  assert_version_bump("1.3.0", BumpType::Minor)
+}
 
-  cmd
-    .arg("--toml-file")
-    .arg(&sample_toml_file)
-    .arg("bump")
-    .arg("-M")
-    .assert()
-    .success()
-    .stdout(std_out_comparison(&expected_comparisons));
+
+#[test]
+fn bump_patch_version() {
+  assert_version_bump("1.2.4", BumpType::Patch)
 }
 
 
@@ -149,6 +138,13 @@ impl fmt::Display for ComparisonType<'_> {
 }
 
 
+enum BumpType {
+  Major,
+  Minor,
+  Patch
+}
+
+
 fn std_out_comparison<'a>(expected: &'a [ComparisonType<'a>]) -> FnPredicate<impl Fn(&[u8]) -> bool + 'a, [u8]> {
     predicate::function(move |out: &[u8]| {
 
@@ -181,3 +177,37 @@ fn setup_test<'a>(working_dir: &TempDir) -> (PathBuf, Command) {
   (sample_toml_file, cmd)
 }
 
+
+fn assert_version_bump(new_version: &str, bump_type: BumpType) {
+  let working_dir = tempdir().unwrap();
+  let (sample_toml_file, mut cmd) = setup_test(&working_dir);
+
+  let expected_version_string =
+    [
+      s!("Updated version from: 1.2.3 -> {new_version}"),
+      s!("{}version = \"1.2.3\"", Colour::Red.paint("-")),
+      s!("{}version = \"{new_version}\"", Colour::Green.paint("+")),
+    ];
+
+  let expected_comparisons: Vec<_> =
+    expected_version_string
+      .iter()
+      .map(|v| ComparisonType::Contains(v))
+      .collect();
+
+  cmd
+    .arg("--toml-file")
+    .arg(&sample_toml_file)
+    .arg("bump");
+
+  match bump_type {
+    BumpType::Major => cmd.arg("-M"),
+    BumpType::Minor => cmd.arg("-m"),
+    BumpType::Patch => cmd.arg("-p"),
+  };
+
+  cmd
+    .assert()
+    .success()
+    .stdout(std_out_comparison(&expected_comparisons));
+}
