@@ -64,13 +64,13 @@ impl fmt::Display for WaffleError {
 
       WaffleError::CouldConvertTomlContentToDocument(filename, content, error) => s!("Could not parse Toml file: {filename} into Toml document. \nContent: {content}\nerror: {error}"),
 
-      WaffleError::TooManyBumpCombinations => "Only one of Major, Minor or Patch is allowed".to_owned(),
+      WaffleError::TooManyBumpCombinations => "Only one of Major, Minor or Patch is allowed. Supply a single bump type.".to_owned(),
 
       WaffleError::NoBumpCombinations => "At least one of Major, Minor or Patch is required".to_owned(),
 
-      WaffleError::NonNumericVersions(package) => s!("Toml package.version: {package} is not numeric"),
+      WaffleError::NonNumericVersions(package) => s!("Toml package.version: {package} is not numeric. Waffle only supports Semantic Versioning."),
 
-      WaffleError::NotSemver(package) => s!("Toml package.version: {package} is not a valid Semantic Version with format: major.minor.patch"),
+      WaffleError::NotSemver(package) => s!("Toml package.version: {package} is not a valid Semantic Version with format: major.minor.patch. Waffle only supports Semantic Versioning."),
     };
 
     write!(f, "{}", result)
