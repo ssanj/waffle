@@ -1,7 +1,7 @@
 use ansi_term::Colour;
 use assert_cmd::Command;
 use predicates::{function::FnPredicate, prelude::predicate};
-use std::{format as s, println as p};
+use std::{format as s, println as p, fmt};
 use tempfile::tempdir;
 
 #[test]
@@ -20,7 +20,7 @@ fn returns_version() -> Result<(), Box<dyn std::error::Error>> {
   Ok(())
 }
 
-const sample_toml_content: &str = r#"
+const SAMPLE_TOML_CONTENT: &str = r#"
 [package]
 name = "Sample"
 version = "1.2.3"
@@ -39,23 +39,38 @@ pretty_assertions = "1"
 assert_cmd = "2"
 "#;
 
+#[derive(Debug, Clone)]
+enum ComparisonType<'a> {
+  Contains(&'a str),
+  DoesNotContain(&'a str)
+}
 
-fn std_out_contains<'a>(expected: &'a [&'a str]) -> FnPredicate<impl Fn(&[u8]) -> bool + 'a, [u8]> {
+impl fmt::Display for ComparisonType<'_> {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{:?}", self)
+  }
+}
+
+
+fn std_out_comparison<'a>(expected: &'a [ComparisonType<'a>]) -> FnPredicate<impl Fn(&[u8]) -> bool + 'a, [u8]> {
     predicate::function(move |out: &[u8]| {
 
     let expected_values: Vec<_> =
       expected
         .iter()
-        .map(|item| item.to_owned())
+        .cloned()
         .collect();
 
       let output = std::str::from_utf8(out).expect("Could not convert stdout to string");
 
-      expected_values.into_iter().all(|value| {
-        let error = s!("Could not validate stdout contains: {}", &value);
+      expected_values.into_iter().all(|comparison| {
+        let error = s!("Could not validate stdout comparison: {}", comparison);
         p!("{}", Colour::Red.paint(&error));
         p!("{}", "-".repeat(error.len()));
-        output.contains(&value)
+        match comparison {
+          ComparisonType::Contains(value) => output.contains(value),
+          ComparisonType::DoesNotContain(value) => !output.contains(value),
+        }
       })
     })
 }
@@ -65,10 +80,10 @@ fn std_out_contains<'a>(expected: &'a [&'a str]) -> FnPredicate<impl Fn(&[u8]) -
 fn get_current_package_version() {
   let working_dir = tempdir().unwrap();
   let sample_toml_file = working_dir.path().join("Sample.toml");
-  std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
+  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
   println!("{}", &sample_toml_file.as_path().to_string_lossy());
   let mut cmd = Command::cargo_bin("waffle").unwrap();
-  let expected_version_string = ["1.2.3"];
+  let expected_version_string = [ComparisonType::Contains("1.2.3")];
 
   cmd
     .arg("--toml-file")
@@ -76,7 +91,7 @@ fn get_current_package_version() {
     .arg("get")
     .assert()
     .success()
-    .stdout(std_out_contains(&expected_version_string));
+    .stdout(std_out_comparison(&expected_version_string));
 }
 
 
@@ -84,10 +99,10 @@ fn get_current_package_version() {
 fn tag_current_package_version() {
   let working_dir = tempdir().unwrap();
   let sample_toml_file = working_dir.path().join("Sample.toml");
-  std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
+  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
   println!("{}", &sample_toml_file.as_path().to_string_lossy());
   let mut cmd = Command::cargo_bin("waffle").unwrap();
-  let expected_version_string = ["git tag v1.2.3"];
+  let expected_version_string = [ComparisonType::Contains("git tag v1.2.3")];
 
   cmd
     .arg("--toml-file")
@@ -95,7 +110,7 @@ fn tag_current_package_version() {
     .arg("tag")
     .assert()
     .success()
-    .stdout(std_out_contains(&expected_version_string));
+    .stdout(std_out_comparison(&expected_version_string));
 }
 
 
@@ -103,7 +118,7 @@ fn tag_current_package_version() {
 fn bump_current_package_version() {
   let working_dir = tempdir().unwrap();
   let sample_toml_file = working_dir.path().join("Sample.toml");
-  std::fs::write(&sample_toml_file, sample_toml_content).unwrap();
+  std::fs::write(&sample_toml_file, SAMPLE_TOML_CONTENT).unwrap();
   println!("{}", &sample_toml_file.as_path().to_string_lossy());
   let mut cmd = Command::cargo_bin("waffle").unwrap();
   let expected_version_string =
@@ -113,6 +128,12 @@ fn bump_current_package_version() {
       &s!("{}version = \"2.0.0\"", Colour::Green.paint("+")),
     ];
 
+  let expected_comparisons: Vec<_> =
+    expected_version_string
+      .into_iter()
+      .map(ComparisonType::Contains)
+      .collect();
+
   cmd
     .arg("--toml-file")
     .arg(&sample_toml_file)
@@ -120,5 +141,5 @@ fn bump_current_package_version() {
     .arg("-M")
     .assert()
     .success()
-    .stdout(std_out_contains(&expected_version_string));
+    .stdout(std_out_comparison(&expected_comparisons));
 }
